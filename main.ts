@@ -103,13 +103,14 @@ const TIER_NORMALIZERS: Array<(s: string) => string> = [(s) => s, stripSpTab, st
 /** All occurrence positions of `old` in `file` at a tier. */
 function occurrences(file: string[], old: string[], tier: number, from = 0): number[] {
   const norm = TIER_NORMALIZERS[tier]!;
-  const f = file.map(norm);
   const o = old.map(norm);
   const hits: number[] = [];
-  for (let i = from; i + o.length <= f.length; i++) {
+  // compare lazily: most start positions fail on their first line, so the file is never copied
+  for (let i = from; i + o.length <= file.length; i++) {
     let ok = true;
     for (let j = 0; j < o.length; j++) {
-      if (f[i + j] !== o[j]) {
+      const line = file[i + j]!;
+      if ((tier === 0 ? line : norm(line)) !== o[j]) {
         ok = false;
         break;
       }
